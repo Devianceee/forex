@@ -13,4 +13,6 @@ Taking a quick look through the code, I can see that Cats Effect 2 is still bein
 Things that can be added / refactored:
 - Update cats effect to version 3 since version 2 is quite old (probably won't do as it requires a lot of possible refactoring)
 - Adding cache system for functions ```get``` and ```set``` for every 5 minutes
-- 
+- Start program and ping all pairs and store them in a map and check if cache is older than 5 mins whenever someone pings the service
+  - if not then returns cached pairs
+  - if so then it updates the cache map with all the pairs then returns the pairs
