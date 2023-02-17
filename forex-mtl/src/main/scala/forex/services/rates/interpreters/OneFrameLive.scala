@@ -28,7 +28,7 @@ class OneFrameLive[F[_]: Sync](config: OneFrameConfig, client: Client[F]) extend
       // used to using "expect" then "run" so this took me a while, wasn't use how to use "expect" here as the either needed to be manually handled
       client.run(request).use { response =>
         for {
-          oneFrame <- response.asJsonDecode[OneFrameResponse] // this took ages to fix because i accidently renamed timeStamp to timestamp which messed up the json
+          oneFrame <- response.asJsonDecode[OneFrameResponse] // this took ages to fix because i accidentally renamed timeStamp to timestamp which messed up the json
         } yield Either.right[errors.Error, Rate](oneFrame.rates.map(_.rate).head)
       }
     }
@@ -39,12 +39,13 @@ class OneFrameLive[F[_]: Sync](config: OneFrameConfig, client: Client[F]) extend
       val uriWithParams = uri.withPath("/rates").withMultiValueQueryParams(Map("pair" -> pairs.map(x => x.from.toString + x.to.toString).toList))
       val tokenHeader = Headers.of(Header("token", config.token))
       val request = Request[F](method = GET, uri = uriWithParams, headers = tokenHeader)
+      println("here allPairs")
 
       // used to using "expect" then "run" so this took me a while, wasn't use how to use "expect" here as the either needed to be manually handled
-      //      client.run(request).use { _ =>
       client.run(request).use { response =>
         for {
           oneFrame <- response.asJsonDecode[NonEmptyList[OneFrame]]
+          _ = println(oneFrame)
         } yield Either.right[errors.Error, NonEmptyList[Rate]](oneFrame.map(_.rate))
       }
     }
