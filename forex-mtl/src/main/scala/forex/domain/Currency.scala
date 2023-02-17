@@ -32,7 +32,6 @@ object Currency {
 
   def allCurrencyPairs(): NonEmptyList[Rate.Pair] = {
     val list = List(Currency.AUD, Currency.CAD, Currency.CHF, Currency.EUR, Currency.GBP, Currency.NZD, Currency.JPY, Currency.SGD, Currency.USD)
-//    println(list.toSet.subsets.map(_.toList).toList)
     val pairedList = for {
       (x, idxX) <- list.zipWithIndex
       (y, idxY) <- list.zipWithIndex

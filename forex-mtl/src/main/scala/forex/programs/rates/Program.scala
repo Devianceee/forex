@@ -1,34 +1,51 @@
 package forex.programs.rates
 
-import cats.Functor
+import cats.Monad
 import cats.data.EitherT
+import cats.implicits._
+import forex.domain.Timestamp.toEpochSeconds
 import forex.domain._
 import forex.programs.rates.errors._
 import forex.services.RatesService
 
-class Program[F[_]: Functor](
+// Turning F into a Monad because I need the flatMap method
+class Program[F[_]: Monad](
     ratesService: RatesService[F]
 ) extends Algebra[F] {
 
   private var cache: Map[Rate.Pair, Rate] = Map.empty
-//  private val foo = EitherT(ratesService.getAllPairs(Currency.allCurrencyPairs())).leftMap(toProgramError(_)).value
 
-  // can cache here, call getAllPairs once cache expires every 5 mins (probably best to use a Map)
-  override def get(request: Protocol.GetRatesRequest): F[Error Either Rate] = {
-    println(Currency.allCurrencyPairs())
+  override def get(request: Protocol.GetRatesRequest): F[errors.Error Either Rate] = {
+
+    // check if cache is empty which would only happen on first run
     if (cache.isEmpty) {
-      // call ratesService.getAllPairs() and then fill in the map
+      println(s"Cache empty - ${Timestamp.now}")
+      val result = for {
+        rates <- EitherT(ratesService.getAllPairs(Currency.allCurrencyPairs())).leftMap(toProgramError(_))
+        _ = rates.map { y => cache += (y.pair -> y) }
+      } yield cache(Rate.Pair(request.from, request.to))
+      result.value
     }
-   // check if cache is up to date
-
-//    EitherT(ratesService.getAllPairs(Currency.allCurrencyPairs())).leftMap(toProgramError(_)).value
-    EitherT(ratesService.get(Rate.Pair(request.from, request.to))).leftMap(toProgramError(_)).value
+      // check if cache is up to date
+    else {
+      if (toEpochSeconds(Timestamp.now) >= (toEpochSeconds(cache(Rate.Pair(request.from, request.to)).timestamp) + 300)) {
+        println(s"Cache expired - ${Timestamp.now}")
+        val result = for {
+          rates <- EitherT(ratesService.getAllPairs(Currency.allCurrencyPairs())).leftMap(toProgramError(_))
+          _ = rates.map { y => cache += (y.pair -> y) }
+        } yield cache(Rate.Pair(request.from, request.to))
+        result.value
+      }
+      else {
+        println(s"Cache up to date - ${Timestamp.now}")
+        cache(Rate.Pair(request.from, request.to)).asRight[errors.Error].pure[F]
+      }
+    }
   }
-
 }
 
 object Program {
-  def apply[F[_]: Functor](
+  def apply[F[_]: Monad](
       ratesService: RatesService[F]
   ): Algebra[F] = new Program[F](ratesService)
 }
