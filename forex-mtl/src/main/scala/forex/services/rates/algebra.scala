@@ -5,6 +5,6 @@ import forex.domain.Rate
 import errors._
 
 trait Algebra[F[_]] {
-  def get(pair: Rate.Pair): F[Error Either Rate]
-  def getAllPairs(pair: NonEmptyList[Rate.Pair]): F[Error Either NonEmptyList[Rate]]
+  def get(pair: Rate.Pair): F[AppError Either Rate]
+  def getAllPairs(pair: NonEmptyList[Rate.Pair]): F[AppError Either NonEmptyList[Rate]]
 }

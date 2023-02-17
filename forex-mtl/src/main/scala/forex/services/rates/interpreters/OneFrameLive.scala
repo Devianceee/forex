@@ -5,8 +5,9 @@ import cats.effect._
 import cats.implicits._
 import forex.config.OneFrameConfig
 import forex.domain.Rate
+import forex.services.rates.Algebra
 import forex.services.rates.Protocol.{OneFrame, OneFrameResponse}
-import forex.services.rates.{Algebra, errors}
+import forex.services.rates.errors.AppError
 import org.http4s.Method.GET
 import org.http4s._
 import org.http4s.circe._
@@ -16,7 +17,7 @@ class OneFrameLive[F[_]: Sync](config: OneFrameConfig, client: Client[F]) extend
 
   implicit val oneFrameEntityDecoder: EntityDecoder[F, List[OneFrame]] = jsonOf[F, List[OneFrame]]
 
-  override def get(pair: Rate.Pair): F[Either[errors.Error, Rate]] = {
+  override def get(pair: Rate.Pair): F[Either[AppError, Rate]] = {
     // Uri.fromString gets a ParseResult which gives an Either,
     // meaning we have to use liftTo to convert from Either[ParseError, A] -> F[Uri] which allows us to work with it
     Uri.fromString(s"http://${config.host}:${config.port}").liftTo[F].flatMap { uri =>
@@ -28,12 +29,12 @@ class OneFrameLive[F[_]: Sync](config: OneFrameConfig, client: Client[F]) extend
       client.run(request).use { response =>
         for {
           oneFrame <- response.asJsonDecode[OneFrameResponse] // this took ages to fix because i accidentally renamed timeStamp to timestamp which messed up the json
-        } yield Either.right[errors.Error, Rate](oneFrame.rates.map(_.rate).head)
+        } yield Either.right[AppError, Rate](oneFrame.rates.map(_.rate).head)
       }
     }
   }
 
-  override def getAllPairs(pairs: NonEmptyList[Rate.Pair]): F[Either[errors.Error, NonEmptyList[Rate]]] = {
+  override def getAllPairs(pairs: NonEmptyList[Rate.Pair]): F[Either[AppError, NonEmptyList[Rate]]] = {
     Uri.fromString(s"http://${config.host}:${config.port}").liftTo[F].flatMap { uri =>
       val uriWithParams = uri.withPath("/rates").withMultiValueQueryParams(Map("pair" -> pairs.map(x => x.from.toString + x.to.toString).toList))
       val tokenHeader = Headers.of(Header("token", config.token))
@@ -43,7 +44,7 @@ class OneFrameLive[F[_]: Sync](config: OneFrameConfig, client: Client[F]) extend
       client.run(request).use { response =>
         for {
           oneFrame <- response.asJsonDecode[NonEmptyList[OneFrame]]
-        } yield Either.right[errors.Error, NonEmptyList[Rate]](oneFrame.map(_.rate))
+        } yield Either.right[AppError, NonEmptyList[Rate]](oneFrame.map(_.rate))
       }
     }
   }

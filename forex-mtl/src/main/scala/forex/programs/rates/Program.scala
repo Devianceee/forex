@@ -15,7 +15,7 @@ class Program[F[_]: Monad](
 
   private var cache: Map[Rate.Pair, Rate] = Map.empty
 
-  override def get(request: Protocol.GetRatesRequest): F[errors.Error Either Rate] = {
+  override def get(request: Protocol.GetRatesRequest): F[AppError Either Rate] = {
 
     // check if cache is empty which would only happen on first run
     if (cache.isEmpty) {
@@ -38,7 +38,7 @@ class Program[F[_]: Monad](
       }
       else {
         println(s"Cache up to date - ${Timestamp.now}")
-        cache(Rate.Pair(request.from, request.to)).asRight[errors.Error].pure[F]
+        cache(Rate.Pair(request.from, request.to)).asRight[AppError].pure[F]
       }
     }
   }
