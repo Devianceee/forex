@@ -11,7 +11,7 @@ which is below the daily limit of 1000 requests per day (this can be upped furth
 Taking a quick look through the code, I can see that Cats Effect 2 is still being used
 
 The general plan for now seems to be:
-- Adding cache system for functions ```get``` and ```set``` for every 5 minutes
+- Adding cache system for functions ```get``` for every 5 minutes
 - Start program and ping all pairs and store them in a map and check if cache is older than 5 mins whenever someone pings the service
   - if not then returns cached pairs
   - if so then it updates the cache map with all the pairs then returns the pairs
