@@ -25,3 +25,4 @@ Struggles right now / that I had:
 Things that can be added / refactored:
 - Update cats effect to version 3 since version 2 is quite old (probably won't do as it requires a lot of possible refactoring)
 - More unit tests can be added since there aren't any which can obviously lead to faulty code
+- Definitely can add more error checking in the cache and request handling, right now there isn't much for the cache itself however if I could further improve on this then I would extend the AppErrors to deal with the cache and requests having more detailed errors.
