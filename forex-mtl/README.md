@@ -24,5 +24,16 @@ Struggles right now / that I had:
 
 Things that can be added / refactored:
 - Update cats effect to version 3 since version 2 is quite old (probably won't do as it requires a lot of possible refactoring)
-- More unit tests can be added since there aren't any which can obviously lead to faulty code
-- Definitely can add more error checking in the cache and request handling, right now there isn't much for the cache itself however if I could further improve on this then I would extend the AppErrors to deal with the cache and requests having more detailed errors.
+- More unit tests can be added since there aren't any which can obviously lead to faulty code (*I would libraries to test such as weaver*)
+- Definitely can **add more error checking** in the cache and request handling, right now there isn't much for the cache itself however if I could further improve on this then I would extend the AppErrors to deal with the cache and requests having more detailed errors
+  
+
+- **Examples** of additional error handling that I can add are:
+  - For the **cache**, if you give invalid/duplicated currencies, you would get a ```NoSuchElementException```. 
+    - I would deal with this error by either having some sort of error
+checking inside of ```Currency.scala``` (probably using an Enum or having ```_``` in the case match) or checking when accessing the cache itself. There are a few other solutions but they are probably not as elegant.
+  - This also extends to the **Currency.scala** case matching throwing a ```MatchError``` when using an invalid currency which can be dealt with as I said above
+  - For the **requests** side, if OneFrame is inaccessible, then there isn't any proper error handling involved to deal with no response, leading to an ```IOException```
+    - I would deal with this error by having checks if there are any other response besides ```Ok``` or ```200``` 
+so if we do get a response (such as ```503 Service Unavailable```) we can properly handle and let the downstream user's know any error's that are useful. 
+    - Otherwise, if there is no response, then we can respond with some error message so the downstream user can know that OneFrame itself is down
